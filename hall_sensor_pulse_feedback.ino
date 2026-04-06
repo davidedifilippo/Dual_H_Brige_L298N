@@ -1,11 +1,35 @@
+
 const int pinVelocita = A0; //pin analogico deputato a leggere i valori del potenziometro
 const int IN_1 = 12; // Devono essere complementari per avere la marcia
 const int IN_2 = 13; //
 const int pin_PWM_A = 11; //pin di controllo della velocità per il motore A
 
+const int pin_canaleA = 2;
+const int pin_canaleB = 3;
+
 //variabili usate per gestire e mostrare i valori di operaizone
 int velocita = 0;  //valore letto dal pin A0
 int duty_Cycle = 0;  //valore in uscita dal pin 11
+
+volatile int contaImpulsi = 0;
+
+volatile boolean A = 0;
+volatile boolean B = 0;
+
+
+int  rifImpulsi = 0;
+int deltaImpulsi = 0; 
+
+long int rifTemporale = 0;
+
+void isrA()
+{
+ if(digitalRead(pin_canaleB)) 
+      contaImpulsi--; //Se B è alto al cambio di A il senso di rotazione è antiorario e diminuisco il numero di impulsi contati 
+ else
+      contaImpulsi++; //Se B è basso al cambio di A il senso di rotazione è orario e aumento il numero di impulsi contati in avanti
+
+}
 
 void setup() {
   //inizializzo la comunicazione seriale cosi da mostrare i valori nel Mointor Seriale
@@ -33,10 +57,31 @@ void setup() {
   digitalWrite(IN_1, LOW);
   digitalWrite(IN_2, HIGH); // Marcia avanti
 
+  //turn on pullup resistor - le uscite dell'encoder sono open-collector
+     
+  pinMode(pin_canaleA, INPUT);
+  pinMode(pin_canaleB, INPUT);
+
+  //Abilito l'interrupt sui pin 2 e dichiaro la funzione da richiamare e quando richiamarle
+    
+  attachInterrupt(digitalPinToInterrupt(pin_canaleA), isrA, RISING); 
+
+  rifTemporale = millis(); //memorizza il tempo attuale
+
 }
 
 
 void loop() {
+
+
+   if(millis()-rifTemporale>=1000){
+    deltaImpulsi = contaImpulsi-rifImpulsi;       //conta gli impulsi nell'ultimo secondo
+    rifImpulsi   = contaImpulsi;                 // aggiorno il riferimento di conteggio al valore attuale
+    rifTemporale = millis(); 
+    }                    //aggiorno il tempo di riferimento
+
+    Serial.print("Giri al secondo: ");  
+    Serial.println (deltaImpulsi/20); 
   
   //leggo la tensione di controllo in ingresso al piedino A0.
   velocita = analogRead(pinVelocita);
