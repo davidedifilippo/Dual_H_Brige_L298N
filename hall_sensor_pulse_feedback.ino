@@ -1,4 +1,3 @@
-
 const int pinVelocita = A0; //pin analogico deputato a leggere i valori del potenziometro
 const int IN_1 = 12; // Devono essere complementari per avere la marcia
 const int IN_2 = 13; //
@@ -59,8 +58,8 @@ void setup() {
 
   //turn on pullup resistor - le uscite dell'encoder sono open-collector
      
-  pinMode(pin_canaleA, INPUT);
-  pinMode(pin_canaleB, INPUT);
+  pinMode(pin_canaleA, INPUT_PULLUP); //tutti gli encoder sono open collector
+  pinMode(pin_canaleB, INPUT_PULLUP);
 
   //Abilito l'interrupt sui pin 2 e dichiaro la funzione da richiamare e quando richiamarle
     
@@ -80,8 +79,9 @@ void loop() {
     rifTemporale = millis(); 
     }                    //aggiorno il tempo di riferimento
 
-    Serial.print("Giri al secondo: ");  
-    Serial.println (deltaImpulsi/20); 
+    Serial.print("Giri al minuto: ");  
+    //ogni giro di riduttore ho 19 giri di motore. con 4 poli del magnete ho 52 impulsi/giro
+    Serial.println((deltaImpulsi/52)*60); 
   
   //leggo la tensione di controllo in ingresso al piedino A0.
   velocita = analogRead(pinVelocita);
